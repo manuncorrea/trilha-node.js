@@ -15,14 +15,24 @@ app.use(express.json());
  const customers = [];
 
 app.post('/account', (request, response) => {
-  const { cpf, name } = request.body;
-  const id =  uuidv4();
+  const { cpf, name } = request.body; 
+
+  // Verificar se já existe o cpf, cadastrado
+  const customersAlreadyExists =  customers.some(
+    (customers) => customers.cpf === cpf
+  );
+
+  if(customersAlreadyExists) {
+    return response.status(400).json({
+      error: "Customer already exists!"
+    })
+  }
 
   //Inserir dados no array
   customers.push({
     cpf,
     name,
-    id,
+    id: uuidv4(),
     statement: []
   })
 
