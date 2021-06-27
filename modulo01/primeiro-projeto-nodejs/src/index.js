@@ -30,6 +30,19 @@ app.use(express.json());
   return next();
  }
 
+//Calculo para saque
+ function getBalance(statement) {
+  const balance = statement.reduce((acc, opration) => {
+    if(opration.type === 'credit') {
+      return acc + opration.amount;
+    } else {
+      return acc - opration.amount;
+    }
+  }, 0);
+
+  return balance;
+ }
+
 app.post('/account', (request, response) => {
   const { cpf, name } = request.body; 
 
@@ -72,6 +85,29 @@ app.post("/deposit", verifyExistsAccountCPF, (request, response) => {
     amount,
     created_at: new Date(),
     type: "credit"
+  }
+
+  customer.statement.push(statementOperation);
+
+  return response.status(201).send();
+
+});
+
+// Criando o saque da conta
+app.post("/withdraw", verifyExistsAccountCPF, (request, response) => {
+  const { amount } = request.body;
+  const { customer } = request;
+
+  const balance = getBalance(customer.statement);
+
+  if(balance < amount ){
+    return response.status(400).json({ error: 'Insufficient founds" '}); // salado infuciente
+  }
+
+  const statementOperation = {
+    amount,
+    created_at: new Date(), 
+    type: 'debit',
   }
 
   customer.statement.push(statementOperation);
